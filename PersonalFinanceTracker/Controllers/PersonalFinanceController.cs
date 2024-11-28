@@ -6,248 +6,285 @@ using PersonalFinanceTracker.Models;
 namespace PersonalFinanceTracker.Controllers
 {
     [Route("api/[controller]")]
-    public class FinanceController : ControllerBase
+    public class financeController : ControllerBase
     {
-        private readonly FinanceContext _context;
+        private readonly FinanceContext Ctx;
 
-        public FinanceController(FinanceContext context)
+        public financeController(FinanceContext c)
         {
-            _context = context;
+            Ctx = c;
+
+
+
         }
 
-        // Transaction-Related Endpoints
+        // Transactions
         [HttpPost("transaction/add")]
-        public async Task<IActionResult> AddTransaction([FromBody] Transaction transaction)
+        public async Task<IActionResult> AddTran([FromBody] Transaction t)
         {
-            if (transaction.Amount == 0)
+            if (t.Amount == 0)
             {
-                return BadRequest("Amount must be non-zero.");
+
+
+
+                return BadRequest("Amount can't be 0");
+
+
             }
 
-            _context.Transactions.Add(transaction);
-            await _context.SaveChangesAsync();
+            Ctx.Transactions.Add(t);
+            await Ctx.SaveChangesAsync();
 
-            return Ok(new { Message = "Transaction added successfully.", Transaction = transaction });
+            return Ok(new { Msg = "Added", T = t });
         }
 
         [HttpGet("transactions")]
-        public async Task<IActionResult> GetTransactions()
+        public async Task<IActionResult> GetAllAsync()
         {
-            var transactions = await _context.Transactions.ToListAsync();
-            return Ok(transactions);
+            var L = await Ctx.Transactions.ToListAsync();
+            return Ok(L);
         }
 
-        [HttpGet("category/{categoryId}")]
-        public async Task<IActionResult> GetTransactionsByCategory(int categoryId)
-        {
-            var transactions = await _context.Transactions.Where(t => t.CategoryId == categoryId).ToListAsync();
-            return Ok(transactions);
+        [HttpGet("category/{CID}")]
+        public async Task<IActionResult> getByCat(int CID)
+        {            var TS = await Ctx.Transactions                .Where(x => x.CategoryId == CID)                .ToListAsync();
+            return Ok(TS);
         }
 
-        [HttpPut("{transactionId}")]
-        public async Task<IActionResult> UpdateTransaction(int transactionId, [FromBody] Transaction updatedTransaction)
+                [HttpPut("{Id}")]
+        public async Task<IActionResult> Change(int Id, [FromBody] Transaction U)
         {
-            var transaction = await _context.Transactions.FindAsync(transactionId);
-            if (transaction == null)
+            var t = await Ctx.Transactions.FindAsync(Id);
+
+            if (t == null)
+            {
+
+                return NotFound();
+            }
+
+            t.Title = U.Title;
+            t.Amount = U.Amount;
+
+
+
+
+
+
+
+
+
+            t.Date = U.Date;
+            t.Type = U.Type;
+            t.CategoryId = U.CategoryId;
+            t.Tags = U.Tags;
+
+            await Ctx.SaveChangesAsync();
+
+            return Ok(new { Msg = "Changed", T = t });
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Rm(int id)
+        {
+            var t = await Ctx.Transactions.FindAsync(id);
+
+            if (t == null)
             {
                 return NotFound();
             }
 
-            transaction.Title = updatedTransaction.Title;
-            transaction.Amount = updatedTransaction.Amount;
-            transaction.Date = updatedTransaction.Date;
-            transaction.Type = updatedTransaction.Type;
-            transaction.CategoryId = updatedTransaction.CategoryId;
-            transaction.Tags = updatedTransaction.Tags;
+            Ctx.Transactions.Remove(t);
+            await Ctx.SaveChangesAsync();
 
-            await _context.SaveChangesAsync();
-
-            return Ok(new { Message = "Transaction updated successfully.", Transaction = transaction });
+            return Ok(new { Msg = "Removed" });
         }
 
-        [HttpDelete("{transactionId}")]
-        public async Task<IActionResult> DeleteTransaction(int transactionId)
-        {
-            var transaction = await _context.Transactions.FindAsync(transactionId);
-            if (transaction == null)
-            {
-                return NotFound();
-            }
-
-            _context.Transactions.Remove(transaction);
-            await _context.SaveChangesAsync();
-
-            return Ok(new { Message = $"Transaction with ID {transactionId} deleted successfully." });
-        }
-
-        // Balance and Summary Endpoints
         [HttpGet("balance")]
-        public async Task<IActionResult> GetCurrentBalance()
+        public async Task<IActionResult> B()
         {
-            var income = await _context.Transactions.Where(t => t.Type == "Income").SumAsync(t => t.Amount);
-            var expenses = await _context.Transactions.Where(t => t.Type == "Expense").SumAsync(t => t.Amount);
-            var balance = income - expenses;
+            var I = await Ctx.Transactions
+                .Where(x => x.Type == "Income")
+                .SumAsync(x => x.Amount);
 
-            return Ok(new { Balance = balance });
+            var E = await Ctx.Transactions
+
+                .Where(x => x.Type == "Expense")
+                .SumAsync(x => x.Amount);
+
+            return Ok(new { B = I - E });
         }
 
-        [HttpGet("summary/monthly/{year}/{month}")]
-        public async Task<IActionResult> GetMonthlySummary(int year, int month)
+        [HttpGet("summary/monthly/{Y}/{M}")]
+        public async Task<IActionResult> S(int Y, int M)
         {
-            var income = await _context.Transactions
-                .Where(t => t.Type == "Income" && t.Date.Year == year && t.Date.Month == month)
-                .SumAsync(t => t.Amount);
+            var I = await Ctx.Transactions
+                .Where(x => x.Type == "Income" &&          x.Date.Year == Y && x.Date.Month == M)
+                .SumAsync(x => x.Amount);
 
-            var expenses = await _context.Transactions
-                .Where(t => t.Type == "Expense" && t.Date.Year == year && t.Date.Month == month)
-                .SumAsync(t => t.Amount);
+            var E = await Ctx.Transactions
+                .Where(x => x.Type == "Expense"                && x.Date.Year == Y && x.Date.Month == M)
+                .SumAsync(x => x.Amount);
 
-            var savings = income - expenses;
-
-            return Ok(new
-            {
-                Month = $"{year}-{month}",
-                Income = income,
-                Expenses = expenses,
-                Savings = savings
-            });
+            return Ok(new { Month = Y + "-" + M, I, E, S = I - E });
         }
 
-        [HttpGet("summary/yearly/{year}")]
-        public async Task<IActionResult> GetYearlySummary(int year)
+        [HttpGet("summary/yearly/{Y}")]
+        public async Task<IActionResult> YS(int Y)
         {
-            var income = await _context.Transactions
-                .Where(t => t.Type == "Income" && t.Date.Year == year)
-                .SumAsync(t => t.Amount);
+            var I = await Ctx.Transactions
+                .Where(x => x.Type == "Income" && x.Date.Year == Y)
+                .SumAsync(x => x.Amount);
 
-            var expenses = await _context.Transactions
-                .Where(t => t.Type == "Expense" && t.Date.Year == year)
-                .SumAsync(t => t.Amount);
+            var E = await Ctx.Transactions
+                .Where(x => x.Type == "Expense" && x.Date.Year == Y)
+                .SumAsync(x => x.Amount);
 
-            var savings = income - expenses;
-
-            return Ok(new
-            {
-                Year = year,
-                Income = income,
-                Expenses = expenses,
-                Savings = savings
-            });
+            return Ok(new { Y, I, E, S = I -       E });
         }
 
-        // Category and Tagging Endpoints
         [HttpPost("category/add")]
-        public async Task<IActionResult> AddCategory([FromBody] Category category)
+        public async Task<IActionResult> CatAdd([FromBody] Category C)
         {
-            _context.Categories.Add(category);
-            await _context.SaveChangesAsync();
-
-            return Ok(new { Message = "Category added successfully.", Category = category });
+            Ctx.Categories.Add(C);
+            await Ctx.SaveChangesAsync();
+            return Ok("Category Added");
         }
 
         [HttpGet("categories")]
-        public async Task<IActionResult> GetAllCategories()
+        public async Task<IActionResult> Categories()
         {
-            var categories = await _context.Categories.ToListAsync();
-            return Ok(categories);
+            return Ok(await Ctx.Categories.ToListAsync());
         }
 
-        [HttpPost("{transactionId}/tags")]
-        public async Task<IActionResult> TagTransaction(int transactionId, [FromBody] string[] tags)
+        [HttpPost("{Id}/tags")]
+        public async Task<IActionResult> Tags(int Id, [FromBody] string[] T)
         {
-            var transaction = await _context.Transactions.FindAsync(transactionId);
-            if (transaction == null)
+            var t = await Ctx.Transactions.FindAsync(Id);
+
+            if (t == null)
             {
                 return NotFound();
             }
 
-            transaction.Tags = tags.ToList();
-            await _context.SaveChangesAsync();
+                    t.Tags = T.ToList();
+            await Ctx.SaveChangesAsync();
 
-            return Ok(new { Message = "Tags added successfully.", TransactionId = transactionId, Tags = tags });
+            return Ok("Tagged");
+
+
+
+
+
+
         }
 
-        [HttpGet("tags/{tag}")]
-        public async Task<IActionResult> GetTransactionsByTag(string tag)
+        [HttpGet("tags/{T}")]
+        public async Task<IActionResult> ByTag(string T)
         {
-            var transactions = await _context.Transactions.Where(t => t.Tags.Contains(tag)).ToListAsync();
-            return Ok(transactions);
+            return Ok(await Ctx.Transactions
+                .Where(x => x.Tags.Contains(T))
+                .ToListAsync());
+
+
+
+
         }
 
-        // Search and Filter Endpoints
         [HttpGet("search")]
-        public async Task<IActionResult> SearchTransactions([FromQuery] string keyword, [FromQuery] DateTime? startDate, [FromQuery] DateTime? endDate)
+        public async Task<IActionResult> Srch([FromQuery] string K, [FromQuery] DateTime? S, [FromQuery] DateTime? E)
         {
-            var transactions = await _context.Transactions
-                .Where(t => t.Title.Contains(keyword) &&
-                            (!startDate.HasValue || t.Date >= startDate) &&
-                            (!endDate.HasValue || t.Date <= endDate))
+            var Q = await Ctx.Transactions
+                .Where(x => x.Title.Contains(K) && (!S.HasValue || x.Date >= S) && (!E.HasValue || x.Date <= E))
                 .ToListAsync();
 
-            return Ok(transactions);
+            return Ok(Q);
         }
 
         [HttpGet("filter")]
-        public async Task<IActionResult> FilterTransactions([FromQuery] decimal? minAmount, [FromQuery] decimal? maxAmount, [FromQuery] string type)
+        public async Task<IActionResult> Filt([FromQuery] decimal? Min, [FromQuery] decimal? Max, [FromQuery] string T)
         {
-            var transactions = await _context.Transactions
-                .Where(t => (!minAmount.HasValue || t.Amount >= minAmount) &&
-                            (!maxAmount.HasValue || t.Amount <= maxAmount) &&
-                            (string.IsNullOrEmpty(type) || t.Type == type))
-                .ToListAsync();
 
-            return Ok(transactions);
+
+
+
+
+            return Ok(await Ctx.Transactions
+                .Where(x => (Min == null || x.Amount >= Min) &&
+                            (Max == null || x.Amount <= Max) &&
+                            (string.IsNullOrEmpty(T) || x.Type == T))
+                .ToListAsync());
         }
 
-        // Reporting and Visualization
         [HttpGet("reports/spending")]
-        public async Task<IActionResult> GetSpendingReport([FromQuery] DateTime startDate, [FromQuery] DateTime endDate)
+        public async Task<IActionResult> Spnd([FromQuery] DateTime SD, [FromQuery] DateTime ED)
         {
-            var report = await _context.Transactions
-                .Where(t => t.Type == "Expense" && t.Date >= startDate && t.Date <= endDate)
-                .GroupBy(t => t.CategoryId)
-                .Select(g => new
-                {
-                    Category = _context.Categories.FirstOrDefault(c => c.Id == g.Key).Name,
-                    Total = g.Sum(t => t.Amount)
-                })
+
+
+
+
+
+
+
+
+            var R = await Ctx.Transactions
+                .Where(x => x.Type == "Expense" && x.Date >= SD && x.Date <= ED)
+                .GroupBy(x => x.CategoryId)
+                .Select(g => new { Cat = Ctx.Categories.FirstOrDefault(c => c.Id == g.Key).Name, T = g.Sum(x => x.Amount) })
                 .ToListAsync();
 
-            return Ok(new { Categories = report });
+            return Ok(new { R });
         }
 
         [HttpGet("reports/transactions/export")]
-        public async Task<IActionResult> ExportTransactionsToCsv()
+        public async Task<IActionResult> Csv()
         {
-            var transactions = await _context.Transactions.ToListAsync();
-            var csv = "Id,Title,Amount,Date,Type,CategoryId,Tags\n" +
-                      string.Join("\n", transactions.Select(t => $"{t.Id},{t.Title},{t.Amount},{t.Date},{t.Type},{t.CategoryId},{string.Join(";", t.Tags)}"));
+            var T = await Ctx.Transactions.ToListAsync();
+            return File(
+                System.Text.Encoding.UTF8.GetBytes("Id,Title,Amount,Date\n" + string.Join("\n", T.Select(x => $"{x.Id},{x.Title},{x.Amount},{x.Date}"))),
+                "text/csv",
+                "data.csv"
+            );
 
-            return File(System.Text.Encoding.UTF8.GetBytes(csv), "text/csv", "transactions.csv");
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         }
 
-        // Notifications and Reminders
         [HttpPost("budget/alert")]
-        public async Task<IActionResult> SetBudgetAlert([FromBody] BudgetAlert budgetAlert)
+        public async Task<IActionResult> BAlert([FromBody] BudgetAlert A)
         {
-            _context.BudgetAlerts.Add(budgetAlert);
-            await _context.SaveChangesAsync();
-
-            return Ok(new { Message = "Budget alert set successfully.", Alert = budgetAlert });
+            Ctx.BudgetAlerts.Add(A);
+            await Ctx.SaveChangesAsync();
+            return Ok(new { Msg = "Alert Added", A });
         }
 
         [HttpGet("budget/status")]
-        public async Task<IActionResult> GetBudgetStatus()
+        public async Task<IActionResult> AlertStatus()
         {
-            var alerts = await _context.BudgetAlerts.ToListAsync();
-            var status = alerts.Select(alert => new
-            {
-                alert.CategoryId,
-                alert.Threshold,
-                Spent = _context.Transactions.Where(t => t.CategoryId == alert.CategoryId && t.Type == "Expense").Sum(t => t.Amount)
-            });
+            var Alerts = await Ctx.BudgetAlerts.ToListAsync();
 
-            return Ok(new { Alerts = status });
+                                                    return Ok(Alerts.Select(a => new
+                                                    {
+                                                        a.CategoryId,
+                                                        a.Threshold,
+                                                        Spent = Ctx.Transactions.Where(x => x.CategoryId == a.CategoryId).Sum(x => x.Amount)
+
+                                                    }));
         }
     }
 }
