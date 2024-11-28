@@ -21,6 +21,10 @@ namespace PersonalFinanceTracker
             builder.Services.AddDbContext<FinanceContext>(options =>
                 options.UseInMemoryDatabase("FinanceDatabase"));
 
+            builder.Services.AddScoped<ITransactionService, TransactionService>();
+            builder.Services.AddScoped<ICategoryService, CategoryService>();
+            builder.Services.AddScoped<IBudgetAlertService, BudgetAlertService>();
+
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
