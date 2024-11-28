@@ -1,9 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.12.35514.174 d17.12
+VisualStudioVersion = 17.12.35514.174
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PersonalFinanceTracker", "PersonalFinanceTracker\PersonalFinanceTracker.csproj", "{CDDB3BE5-B9A9-4D10-99C6-6AB37D1DC257}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnitTests", "UnitTests\UnitTests.csproj", "{A6385AB8-A3BD-4628-BDAC-C544020EDE3C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{CDDB3BE5-B9A9-4D10-99C6-6AB37D1DC257}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CDDB3BE5-B9A9-4D10-99C6-6AB37D1DC257}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CDDB3BE5-B9A9-4D10-99C6-6AB37D1DC257}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A6385AB8-A3BD-4628-BDAC-C544020EDE3C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A6385AB8-A3BD-4628-BDAC-C544020EDE3C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A6385AB8-A3BD-4628-BDAC-C544020EDE3C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A6385AB8-A3BD-4628-BDAC-C544020EDE3C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
