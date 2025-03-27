@@ -1,0 +1,9 @@
+0. create a code segment to read in a csv file into pandas dataframe
+
+1. generate a python function which will receive a pandas dataframe and a string as column name then it will return the distinct values of that column. the result has to be a dataframe with one column where name of the result column is equals to "column_name" parameter
+
+2. generate a method which will receive a dataframe and a column name and to additional string parameters called “old_value”, “new_value”. The purpose of this method to do data cleansing and replace “old_value” with “new_value” in the given column of the dataframes
+
+3. generate a method which will receive a dataframe and will use the “ListPrice” column to calculate discounted price. The formula to use is “DiscountedPrice” = “ListPrice” * 0.9. Then return the dataframe
+
+4. generate a method which will receive a dataframe and will return a new dataframe. In the new dataframe we would like to find average price calculated from “LimitPrice” groupped by “Category” column
